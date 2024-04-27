@@ -1,5 +1,8 @@
 
 // NOTE: Renderer can't be a protocol as that would disallow default arguments.
+// To make it generic it would need to delegate the exact functionality to a generic
+// `RenderTarget` protocol. Silly thing to do just to work around Swift yet again having missing
+// features specifically for protocols. Even more annoying than not allowing namespaces.
 public struct Renderer/*: ~Copyable */{
     internal var display: Image<RGBA>
     
@@ -116,8 +119,16 @@ public extension Drawable {
     func colorMap<C: Color>(_ existing: C, to new: C) -> ColorMap<Self, C> {
         self.colorMap { $0 == existing ? new : $0 }
     }
+    
+    /// Shorthand for flattening a nested structure of lazy drawables into a trivial image, for
+    /// cases where using memory is less costly vs constantly recomputing all operations.
+    func flatten() -> Image<Layout> {
+        fatalError() // TODO(!!!!!)
+    }
 }
 
+/// A lazy 2d slice of another abstract `Drawable`, and a `Drawable` in itself.
+/// Useful for example for slicing sprites from a sprite sheet.
 public struct DrawableSlice<Inner: Drawable>: Drawable {
     public let inner: Inner
     private let x: Int
@@ -136,6 +147,7 @@ public struct DrawableSlice<Inner: Drawable>: Drawable {
     public subscript(x: Int, y: Int) -> Inner.Layout { inner[x + self.x, y + self.y] }
 }
 
+/// A lazy grid of equal size `Drawable` slices, for example a sprite sheet, tile map or tile font.
 public struct DrawableGrid<Inner: Drawable>: Drawable {
     public let inner: Inner
     public var width: Int { inner.width }
@@ -155,6 +167,7 @@ public struct DrawableGrid<Inner: Drawable>: Drawable {
     }
 }
 
+/// A lazy wrapper around a drawable, applies a map function to every color it yields.
 public struct ColorMap<Inner: Drawable, L: Color>: Drawable {
     public let inner: Inner
     private let map: (L) -> L
@@ -169,6 +182,8 @@ public struct ColorMap<Inner: Drawable, L: Color>: Drawable {
     public subscript(x: Int, y: Int) -> Inner.Layout { .init(map(.init(inner[x, y]))) }
 }
 
+// TODO(!): This should be a `TileFont`. Use `Font` for a generic font protocol describing only
+//          the mapping of characters to abstract drawables.
 public struct Font<Source: Drawable> {
     public let inner: DrawableGrid<Source>
     public let map: (CChar) -> (x: Int, y: Int)

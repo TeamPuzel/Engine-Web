@@ -10,6 +10,9 @@ public protocol Color: Equatable {
 }
 
 public extension Color {
+    // TODO(?): Does color need these in the first place?
+    // TODO(!): These methods are extremely likely to overflow.
+    //          I should decide on the correct way to handle this.
     static func + (lhs: Self, rhs: some Color) -> Self {
         .init(r: lhs.r + rhs.r, g: lhs.g + rhs.g, b: lhs.b + rhs.b, a: lhs.a + rhs.a)
     }
@@ -23,11 +26,21 @@ public extension Color {
         .init(r: lhs.r - rhs, g: lhs.g - rhs, b: lhs.b - rhs, a: lhs.a - rhs)
     }
     
+    /// This initializer makes all color layouts interchangeable at compile time as long
+    /// as they are representable with 8 bit rgba values. It proves that any color is convertible
+    /// to any other color.
+    ///
+    /// The engine uses this to emit draw methods optimized for individual color layouts without
+    /// exposing added complexity to the user. Color representation matching the engine internal
+    /// type (currently `RGBA` but potentially customizeable in the future) should inline and
+    /// optimize away any conversion.
     init(_ other: some Color) {
         self.init(r: other.r, g: other.g, b: other.b, a: other.a)
     }
 }
 
+// TODO(?): How to make palettes generic? I can only think of a way that would abuse function
+//          overloading a little, and I would prefer to keep the code as simple as possible.
 public struct RGBA: Color {
     public let r, g, b, a: UInt8
     
