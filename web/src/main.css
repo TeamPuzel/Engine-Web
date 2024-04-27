@@ -1,0 +1,65 @@
+
+/* It's dangerous to go alone! Take this color palette :) */
+/* My Strawberry code theme :) */
+body {
+    /* Colors */
+    --pal-strawberry: hsl(347, 75%, 62%); /* Keywords */
+    --pal-banana:     hsl(36, 76%, 70%);  /* Type declaration identifiers */
+    --pal-apple:      hsl(74, 56%, 70%);  /* Class and protocol type names */
+    --pal-lime:       hsl(108, 50%, 73%); /* Struct and enum type names */
+    --pal-sky:        hsl(202, 46%, 63%); /* Type members */
+    --pal-lemon:      hsl(43, 92%, 64%);  /* Numbers */
+    --pal-orange:     hsl(13, 83%, 68%);  /* String literals */
+    /* Monochrome */
+    --pal-white:      hsl(0, 0%, 88%);
+    --pal-light:      hsl(0, 0%, 50%);
+    --pal-medium:     hsl(0, 0%, 23%);
+    --pal-dark:       hsl(0, 0%, 11%);
+    --pal-black:      hsl(0, 0%, 6%);
+    
+    /* Special */
+    --pal-nil:         hsla(0, 0%, 0%, 0%);
+}
+
+/* Utility classes */
+.strawberry { color: var(--pal-strawberry); font-style: italic; }
+.banana     { color: var(--pal-banana)     }
+.apple      { color: var(--pal-apple)      }
+.lime       { color: var(--pal-lime)       }
+.sky        { color: var(--pal-sky)        }
+.lemon      { color: var(--pal-lemon)      }
+.orange     { color: var(--pal-orange)     }
+.white      { color: var(--pal-white)      }
+.light      { color: var(--pal-light)      }
+.medium     { color: var(--pal-medium)     }
+.dark       { color: var(--pal-dark)       }
+.black      { color: var(--pal-black)      }
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src:
+        url("fonts/Italic.ttf") format("truetype"),
+        url("fonts/Normal.ttf") format("truetype")
+}
+
+html, body {
+    height: 100vh;
+    width: 100vw;
+    font-family: JetBrains Mono;
+    background-color: var(--pal-black);
+    color: var(--pal-white);
+}
+
+body {
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+canvas {
+    width: 512px;
+    height: 512px;
+}
