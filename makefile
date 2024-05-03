@@ -26,8 +26,11 @@ clean:
 serve:
 	@cd web; esbuild --servedir=src --serve
 
-# WARNING: This is incomplete and the definitions need to be manually corrected to be const.
-# I will just write something else as xxd is too limited.
+# WARNING: This is incomplete and the definitions need to be manually corrected.
+# I will just write a script myself as xxd appears to be too limited.
+# You must manually:
+# 1. Make the generated constants const
+# 2. create pointers to the data like so: `const unsigned char *ASSETS_BUNDLE_PICOFONT_TGA_PTR = ASSETS_BUNDLE_PICOFONT_TGA;`
 assets:
 	@> assets/include/assets.h
 	@> assets/assets.c
