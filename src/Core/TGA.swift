@@ -4,7 +4,7 @@
 ///
 /// I will likely avoid improving it, rather I will implement a simpler format of my own
 /// and add it to Aseprite (or write a custom editor within this engine, probably easier).
-public struct TGA: Drawable {
+public struct UnsafeTGAPointer: Drawable {
     private let base: UnsafeRawPointer
     
     public init(from base: UnsafeRawPointer) { self.base = base }

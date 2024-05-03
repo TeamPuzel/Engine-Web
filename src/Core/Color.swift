@@ -6,7 +6,7 @@ public protocol Color: Equatable {
     var a: UInt8 { get }
     
     init(r: UInt8, g: UInt8, b: UInt8, a: UInt8)
-    init(luminocity: UInt8, a: UInt8)
+    init(luminosity: UInt8, a: UInt8)
 }
 
 public extension Color {
@@ -51,10 +51,10 @@ public struct RGBA: Color {
         self.a = a
     }
     
-    public init(luminocity: UInt8, a: UInt8 = 255) {
-        self.r = luminocity
-        self.g = luminocity
-        self.b = luminocity
+    public init(luminosity: UInt8, a: UInt8 = 255) {
+        self.r = luminosity
+        self.g = luminosity
+        self.b = luminosity
         self.a = a
     }
     
@@ -123,10 +123,10 @@ public struct BGRA: Color {
         self.a = a
     }
     
-    public init(luminocity: UInt8, a: UInt8 = 255) {
-        self.r = luminocity
-        self.g = luminocity
-        self.b = luminocity
+    public init(luminosity: UInt8, a: UInt8 = 255) {
+        self.r = luminosity
+        self.g = luminosity
+        self.b = luminosity
         self.a = a
     }
 }

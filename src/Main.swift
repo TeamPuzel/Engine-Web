@@ -1,4 +1,6 @@
 
+import Assets
+
 struct Main: Game {
     var mouse: (x: Int, y: Int) = (0, 0)
     
@@ -11,3 +13,4 @@ struct Main: Game {
         renderer.draw(Images.UI.cursor, x: self.mouse.x - 1, y: self.mouse.y - 1)
     }
 }
+

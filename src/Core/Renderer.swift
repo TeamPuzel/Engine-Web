@@ -1,8 +1,15 @@
 
-// NOTE: Renderer can't be a protocol as that would disallow default arguments.
-// To make it generic it would need to delegate the exact functionality to a generic
-// `RenderTarget` protocol. Silly thing to do just to work around Swift yet again having missing
-// features specifically for protocols. Even more annoying than not allowing namespaces.
+/// A wrapper type for an `Image` target providing comprehensive software rendering functionality.
+///
+/// Renderer can't be a protocol as that would disallow default arguments.
+/// To make it generic it would need to delegate the exact functionality to a generic
+/// `RenderTarget` protocol. This would also allow correct handling of oob pixel writes,
+/// since there is no way to guarantee that a `RenderTarget` handles this, short of a
+/// Haskell style "law" - and I prefer to lean on the type system as much as possible.
+///
+/// # Copyability
+/// Not sure if it should be move only, it's not required for correctness, but would prevent
+/// misuse as copying this could be very expensive and cause large cyclic allocations.
 public struct Renderer/*: ~Copyable */{
     internal var display: Image<RGBA>
     
@@ -33,7 +40,7 @@ public struct Renderer/*: ~Copyable */{
     public mutating func draw(_ drawable: some Drawable, x: Int, y: Int) {
         for ix in 0..<drawable.width {
             for iy in 0..<drawable.height {
-                // TODO(!) Handle opacity with blending modes
+                // TODO(!) Handle opacity with blending modes. The blending api needs design.
                 let color = drawable[ix, iy]
                 if color.a == 255 {
                     self.pixel(x: ix + x, y: iy + y, color: color)
@@ -66,39 +73,27 @@ public struct Renderer/*: ~Copyable */{
         }
     }
     
-//    // TODO(!!): Implement text once Embedded Swift has String support
-//    public mutating func text(_ string: some StringProtocol, x: Int, y: Int, foreground: Color = .white, background: Color? = nil, wrap: Bool = false) {
-//        let symbols = string.compactMap { char in Symbol(char) }
-//        for (off, sym) in symbols.enumerated() {
-//            if x + (4 * off) < display.width {
-//                self.symbol(sym, x: x + (off * 4), y: y, foreground: foreground, background: background)
-//            } else if wrap {
-//                self.text(
-//                    string.suffix(from: string.index(string.startIndex, offsetBy: off)),
-//                    x: 1, y: y + 6, foreground: foreground, background: background, wrap: wrap
-//                )
-//                break
-//            } else {
-//                break
-//            }
-//        }
-//    }
-//    
-//    private mutating func symbol(_ sym: Symbol, x: Int, y: Int, foreground: Color, background: Color?) {
-//        // Background
-//        if let bgc = background {
-//            self.rectangle(x: x - 1, y: y - 1, w: 5, h: 7, color: bgc, fill: true)
-//        }
-//        // Foreground
-//        for (iy, column) in sym.data.enumerated() {
-//            for (ix, flag) in column.enumerated() {
-//                if flag { self.pixel(x: x + ix, y: y + iy, color: foreground) }
-//            }
-//        }
-//    }
+    public mutating func text(
+        _ string: CString, x: Int, y: Int, color: some Color, font: TileFont<some Drawable>
+    ) {
+        for (i, char) in string.enumerated() {
+            let symbol = font[char]
+            self.draw(
+                symbol.colorMap(.init(RGBA.white), to: color),
+                x: x + (i * symbol.width + i * font.spacing),
+                y: y
+            )
+        }
+    }
 }
 
-public protocol Drawable {
+// Technically `Renderer` is a `Drawable`, so it could be trivially used to for example
+// color map the entire screen by rendering a `ColorMap` of itself.
+extension Renderer: Drawable {
+    public subscript(x: Int, y: Int) -> RGBA { self.display[x, y] }
+}
+
+public protocol Drawable<Layout>: Equatable {
     associatedtype Layout: Color
     var width: Int { get }
     var height: Int { get }
@@ -121,9 +116,29 @@ public extension Drawable {
     }
     
     /// Shorthand for flattening a nested structure of lazy drawables into a trivial image, for
-    /// cases where using memory is less costly vs constantly recomputing all operations.
-    func flatten() -> Image<Layout> {
-        fatalError() // TODO(!!!!!)
+    /// cases where using memory and losing information is preferable to repeatedly recomputing all layers.
+    func flatten() -> Image<Layout> { .init(self) }
+}
+
+public extension Drawable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        guard lhs.width == rhs.width && lhs.height == rhs.height else { return false }
+        for x in 0..<lhs.width {
+            for y in 0..<lhs.width {
+                guard lhs[x, y] == rhs[x, y] else { return false }
+            }
+        }
+        return true
+    }
+    
+    static func == (lhs: Self, rhs: some Drawable) -> Bool {
+        guard lhs.width == rhs.width && lhs.height == rhs.height else { return false }
+        for x in 0..<lhs.width {
+            for y in 0..<lhs.width {
+                guard lhs[x, y] == .init(rhs[x, y]) else { return false }
+            }
+        }
+        return true
     }
 }
 
@@ -184,12 +199,20 @@ public struct ColorMap<Inner: Drawable, L: Color>: Drawable {
 
 // TODO(!): This should be a `TileFont`. Use `Font` for a generic font protocol describing only
 //          the mapping of characters to abstract drawables.
-public struct Font<Source: Drawable> {
+public struct TileFont<Source: Drawable> {
     public let inner: DrawableGrid<Source>
     public let map: (CChar) -> (x: Int, y: Int)
+    public let spacing: Int
     
-    public init(source: Source, charWidth: Int, charHeight: Int, map: @escaping (CChar) -> (x: Int, y: Int)) {
+    public init(
+        source: Source,
+        charWidth: Int,
+        charHeight: Int,
+        spacing: Int = 1,
+        map: @escaping (CChar) -> (x: Int, y: Int)
+    ) {
         self.inner = source.grid(itemWidth: charWidth, itemHeight: charHeight)
+        self.spacing = spacing
         self.map = map
     }
     

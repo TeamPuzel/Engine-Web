@@ -34,10 +34,11 @@ let package = Package(
     name: "Game",
     platforms: [.macOS(.v14)],
     targets: [
+        .target(name: "Assets", path: "assets", cSettings: cSettings),
         .target(name: "Runtime", path: "runtime", cSettings: cSettings),
         .executableTarget(
             name: "Game",
-            dependencies: ["Runtime"],
+            dependencies: ["Runtime", "Assets"],
             path: "src",
             cSettings: cSettings,
             swiftSettings: swiftSettings,

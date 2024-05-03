@@ -1,0 +1,4 @@
+
+module Assets {
+    header "include/assets.h"
+}

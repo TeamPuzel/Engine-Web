@@ -1,24 +1,36 @@
 
-public struct Image<T: Color>: Drawable {
-    public private(set) var data: [T]
+public struct Image<Layout: Color>: Drawable {
+    public private(set) var data: [Layout]
     public let width, height: Int
     
-    public init(width: Int, height: Int, color: T = RGBA.clear) {
+    public init(width: Int, height: Int, color: Layout = RGBA.clear) {
         self.width = width
         self.height = height
         self.data = .init(repeating: color, count: width * height)
     }
     
-    public subscript(x: Int, y: Int) -> T {
+    public init(_ drawable: some Drawable<Layout>) {
+        self.width = drawable.width
+        self.height = drawable.height
+        self.data = .init()
+        self.data.reserveCapacity(self.width * self.height)
+        for x in 0..<self.width {
+            for y in 0..<self.height {
+                self[x, y] = drawable[x, y]
+            }
+        }
+    }
+    
+    public subscript(x: Int, y: Int) -> Layout {
         get { data[x + y * width] }
         set { data[x + y * width] = newValue }
     }
 }
 
 extension Image: ExpressibleByArrayLiteral {
-    public typealias ArrayLiteralElement = [T]
+    public typealias ArrayLiteralElement = [Layout]
     
-    public init(arrayLiteral elements: [T]...) {
+    public init(arrayLiteral elements: [Layout]...) {
         self.width = elements[0].count
         self.height = elements.count
         self.data = elements.joined()
