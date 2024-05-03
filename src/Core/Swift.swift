@@ -31,6 +31,19 @@ extension Array: @retroactive ExpressibleByStringLiteral where Element == CChar 
     }
 }
 
+extension CChar: @retroactive ExpressibleByUnicodeScalarLiteral {}
+extension CChar: @retroactive ExpressibleByExtendedGraphemeClusterLiteral {}
+
+extension CChar: @retroactive ExpressibleByStringLiteral {
+    public init(stringLiteral value: StaticString) {
+        assert(value.isASCII)
+        self.init()
+        value.withUTF8Buffer { ptr in
+            self = Int8(bitPattern: ptr.first!)
+        }
+    }
+}
+
 public extension Array where Element: Collection {
     func joined() -> [Element.Element] {
         self.reduce(into: []) { acc, el in acc.append(contentsOf: el) }
