@@ -26,6 +26,8 @@ clean:
 serve:
 	@cd web; esbuild --servedir=src --serve
 
+# WARNING: This is incomplete and the definitions need to be manually corrected to be const.
+# I will just write something else as xxd is too limited.
 assets:
 	@> assets/include/assets.h
 	@> assets/assets.c
